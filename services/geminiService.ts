@@ -7,11 +7,22 @@ if (!process.env.API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-export const generateCreativePrompt = async (): Promise<string> => {
+const basePrompt = "Generate a short, creative, visually descriptive prompt for an AI image generator to create a stunning and unique wallpaper. The prompt should be a single sentence.";
+const styleSuffix = 'Focus on dreamlike or surreal landscapes, abstract concepts, or futuristic cityscapes. Example: "A bioluminescent forest where the trees pulse with soft, ethereal light."';
+
+
+export const generateCreativePrompt = async (category: string = 'Featured'): Promise<string> => {
+    let prompt = basePrompt;
+    if (category && category !== 'Featured') {
+        prompt += ` The category is "${category}".`;
+    } else {
+        prompt += ` ${styleSuffix}`;
+    }
+
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
-            contents: 'Generate a short, creative, visually descriptive prompt for an AI image generator to create a stunning and unique wallpaper. The prompt should be a single sentence focusing on dreamlike or surreal landscapes, abstract concepts, or futuristic cityscapes. Example: "A bioluminescent forest where the trees pulse with soft, ethereal light."'
+            contents: prompt
         });
         return response.text.trim().replace(/^"|"$/g, ''); // Trim quotes if present
     } catch (error) {
@@ -20,15 +31,20 @@ export const generateCreativePrompt = async (): Promise<string> => {
     }
 };
 
-export const generateImage = async (prompt: string): Promise<string> => {
+export const generateImage = async (prompt: string, size: string = 'Laptop'): Promise<string> => {
+    const aspectRatio = size === 'Phone' ? '9:16' : '16:9';
+    const promptPrefix = size === 'Phone' 
+        ? 'Phone wallpaper, 9:16 aspect ratio' 
+        : 'Wallpaper, 16:9 aspect ratio';
+
     try {
         const response = await ai.models.generateImages({
             model: 'imagen-4.0-generate-001',
-            prompt: `Wallpaper, 16:9 aspect ratio, high resolution, stunning digital art, masterpiece. Prompt: ${prompt}`,
+            prompt: `${promptPrefix}, high resolution, stunning digital art, masterpiece. Prompt: ${prompt}`,
             config: {
                 numberOfImages: 1,
                 outputMimeType: 'image/png',
-                aspectRatio: '16:9',
+                aspectRatio: aspectRatio,
             },
         });
 

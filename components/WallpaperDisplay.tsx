@@ -5,11 +5,16 @@ interface WallpaperDisplayProps {
   imageUrl: string | null;
   isLoading: boolean;
   error: string | null;
+  size: string;
 }
 
-const WallpaperDisplay: React.FC<WallpaperDisplayProps> = ({ imageUrl, isLoading, error }) => {
+const WallpaperDisplay: React.FC<WallpaperDisplayProps> = ({ imageUrl, isLoading, error, size }) => {
+  const containerClass = size === 'Phone'
+    ? "relative w-full max-w-sm mx-auto aspect-[9/16] bg-gray-800 rounded-lg overflow-hidden shadow-2xl transition-all duration-500"
+    : "relative w-full aspect-video bg-gray-800 rounded-lg overflow-hidden shadow-2xl transition-all duration-500";
+    
   return (
-    <div className="relative w-full aspect-video bg-gray-800 rounded-lg overflow-hidden shadow-2xl transition-all duration-500">
+    <div className={containerClass}>
       {imageUrl && (
         <img
           src={imageUrl}
