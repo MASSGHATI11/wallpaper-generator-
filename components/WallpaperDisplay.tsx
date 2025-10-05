@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface WallpaperDisplayProps {
@@ -15,28 +14,37 @@ const WallpaperDisplay: React.FC<WallpaperDisplayProps> = ({ imageUrl, isLoading
     
   return (
     <div className={containerClass}>
-      {imageUrl && (
+      {imageUrl && !isLoading && (
         <img
+          key={imageUrl}
           src={imageUrl}
           alt="Generated AI Wallpaper"
-          className="w-full h-full object-cover transition-opacity duration-700"
-          style={{ opacity: isLoading ? 0.5 : 1 }}
+          className="w-full h-full object-cover animate-fade-in-zoom"
         />
       )}
       
       {isLoading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-10">
           <div className="w-16 h-16 border-4 border-t-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
           <p className="mt-4 text-lg font-semibold text-white tracking-wider">Generating new reality...</p>
         </div>
       )}
 
       {error && !isLoading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900 bg-opacity-80 p-4">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900 bg-opacity-80 p-4 z-10">
           <i className="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
           <h3 className="text-xl font-bold text-white text-center">An Error Occurred</h3>
           <p className="text-red-200 text-center mt-2">{error}</p>
         </div>
+      )}
+
+      {/* Keep previous image visible during loading, but dimmed */}
+      {imageUrl && isLoading && (
+         <img
+          src={imageUrl}
+          alt="Previous AI Wallpaper"
+          className="w-full h-full object-cover opacity-50"
+        />
       )}
     </div>
   );
