@@ -1,13 +1,20 @@
-
 import React from 'react';
 
 export const categories = [
   { name: 'Featured', icon: 'fa-star' },
   { name: 'Landscapes', icon: 'fa-mountain-sun' },
+  { name: 'Nature', icon: 'fa-leaf' },
   { name: 'Sci-Fi', icon: 'fa-rocket' },
-  { name: 'Abstract', icon: 'fa-shapes' },
-  { name: 'Animals', icon: 'fa-paw' },
+  { name: 'Cyberpunk', icon: 'fa-robot' },
+  { name: 'Cars', icon: 'fa-car' },
+  { name: 'Anime', icon: 'fa-eye' },
+  { name: 'Fantasy', icon: 'fa-dragon' },
+  { name: 'Space', icon: 'fa-meteor' },
+  { name: 'Underwater', icon: 'fa-water' },
   { name: 'Cityscapes', icon: 'fa-city' },
+  { name: 'Animals', icon: 'fa-paw' },
+  { name: 'Abstract', icon: 'fa-shapes' },
+  { name: 'Minimalist', icon: 'fa-ellipsis-h' },
 ];
 
 interface CategorySelectorProps {

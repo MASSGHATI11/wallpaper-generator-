@@ -8,11 +8,19 @@ import Controls from './components/Controls';
 import CategorySelector from './components/CategorySelector';
 import SizeSelector from './components/SizeSelector';
 import History from './components/History';
+import AdvancedOptions from './components/AdvancedOptions';
 
 interface HistoryItem {
   imageUrl: string;
   prompt: string;
 }
+
+export interface AdvancedPromptOptions {
+  artStyle: string;
+  colorPalette: string;
+  detailLevel: number;
+}
+
 
 const App: React.FC = () => {
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
@@ -24,19 +32,29 @@ const App: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('Featured');
   const [selectedSize, setSelectedSize] = useState<string>('Laptop');
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [advancedOptions, setAdvancedOptions] = useState<AdvancedPromptOptions>({
+    artStyle: 'Any',
+    colorPalette: 'Any',
+    detailLevel: 3, // Mid-point for a 1-5 slider
+  });
 
-  const generateNewWallpaper = useCallback(async (category: string, size: string) => {
+  const generateNewWallpaper = useCallback(async (category: string, size: string, options: AdvancedPromptOptions) => {
     setIsLoading(true);
     setError(null);
     try {
-      const prompt = await generateCreativePrompt(category);
+      const prompt = await generateCreativePrompt(category, options);
       setCurrentPrompt(prompt);
       const imageUrl = await generateImage(prompt, size);
       setCurrentImageUrl(imageUrl);
       setHistory(prev => [{ imageUrl, prompt }, ...prev].slice(0, 10));
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to generate wallpaper:', err);
-      setError('Failed to generate wallpaper. The AI might be too busy. Please wait a moment.');
+      if (err.message === "QUOTA_EXHAUSTED") {
+        setError("API quota exceeded. Automatic regeneration is paused. Please check your billing details or try again later.");
+        setIsPaused(true);
+      } else {
+        setError('Failed to generate wallpaper. The AI might be too busy. Please wait a moment.');
+      }
       // Keep the old wallpaper if a new one fails
     } finally {
       setIsLoading(false);
@@ -45,7 +63,7 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    generateNewWallpaper(selectedCategory, selectedSize);
+    generateNewWallpaper(selectedCategory, selectedSize, advancedOptions);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -61,21 +79,29 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (countdown === 0 && !isPaused) {
-      generateNewWallpaper(selectedCategory, selectedSize);
+      generateNewWallpaper(selectedCategory, selectedSize, advancedOptions);
     }
-  }, [countdown, isPaused, generateNewWallpaper, selectedCategory, selectedSize]);
+  }, [countdown, isPaused, generateNewWallpaper, selectedCategory, selectedSize, advancedOptions]);
   
   const handleCategoryChange = (category: string) => {
     if (isLoading) return;
     setSelectedCategory(category);
-    generateNewWallpaper(category, selectedSize);
+    generateNewWallpaper(category, selectedSize, advancedOptions);
   };
 
   const handleSizeChange = (size: string) => {
     if (isLoading) return;
     setSelectedSize(size);
-    generateNewWallpaper(selectedCategory, size);
+    generateNewWallpaper(selectedCategory, size, advancedOptions);
   };
+
+  const handleAdvancedOptionsChange = (newOptions: Partial<AdvancedPromptOptions>) => {
+    if (isLoading) return;
+    const updatedOptions = { ...advancedOptions, ...newOptions };
+    setAdvancedOptions(updatedOptions);
+    generateNewWallpaper(selectedCategory, selectedSize, updatedOptions);
+  };
+
 
   const togglePause = () => {
     setIsPaused(prev => !prev);
@@ -83,9 +109,26 @@ const App: React.FC = () => {
   
   const handleDownload = () => {
     if (!currentImageUrl) return;
+
+    // 1. More robustly sanitize the prompt for a safe filename
+    const sanitizedPrompt = currentPrompt
+      .substring(0, 50) // Use a portion of the prompt for brevity
+      .replace(/[\\/:*?"<>|]/g, '_') // Replace invalid OS-specific characters with an underscore
+      .replace(/\s+/g, '_') // Replace whitespace with a single underscore
+      .replace(/__+/g, '_') // Collapse multiple underscores into one
+      .replace(/^_+|_+$/g, ''); // Remove leading/trailing underscores
+
+    // 2. Create a formatted timestamp (YYYYMMDDHHMMSS) for uniqueness
+    const now = new Date();
+    const pad = (num: number) => num.toString().padStart(2, '0');
+    const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    
+    // 3. Combine parts, using a default if the sanitized prompt is empty
+    const filename = `${sanitizedPrompt || 'ai-wallpaper'}_${timestamp}.png`;
+
     const link = document.createElement('a');
     link.href = currentImageUrl;
-    link.download = `${currentPrompt.substring(0, 30).replace(/\s/g, '_')}.png`;
+    link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -122,12 +165,17 @@ const App: React.FC = () => {
               isLoading={isLoading}
             />
           </div>
+          <AdvancedOptions 
+            options={advancedOptions}
+            onOptionsChange={handleAdvancedOptionsChange}
+            isLoading={isLoading}
+          />
           <Controls
             prompt={currentPrompt}
             countdown={countdown}
             isPaused={isPaused}
             onTogglePause={togglePause}
-            onRegenerate={() => generateNewWallpaper(selectedCategory, selectedSize)}
+            onRegenerate={() => generateNewWallpaper(selectedCategory, selectedSize, advancedOptions)}
             onDownload={handleDownload}
             isLoading={isLoading}
           />

@@ -24,9 +24,11 @@ const WallpaperDisplay: React.FC<WallpaperDisplayProps> = ({ imageUrl, isLoading
       )}
       
       {isLoading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-10">
-          <div className="w-16 h-16 border-4 border-t-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
-          <p className="mt-4 text-lg font-semibold text-white tracking-wider">Generating new reality...</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-10 scanline-container">
+          <i className="fas fa-brain text-4xl text-blue-300 animate-pulse-slow"></i>
+          <p className="mt-4 text-lg font-semibold text-white tracking-wider animate-pulse-slow">
+            Generating new reality...
+          </p>
         </div>
       )}
 

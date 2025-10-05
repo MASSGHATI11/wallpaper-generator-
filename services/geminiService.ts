@@ -1,5 +1,5 @@
-
 import { GoogleGenAI } from "@google/genai";
+import { AdvancedPromptOptions } from "../App";
 
 if (!process.env.API_KEY) {
     throw new Error("API_KEY environment variable is not set");
@@ -11,13 +11,36 @@ const basePrompt = "Generate a short, creative, visually descriptive prompt for 
 const styleSuffix = 'Focus on dreamlike or surreal landscapes, abstract concepts, or futuristic cityscapes. Example: "A bioluminescent forest where the trees pulse with soft, ethereal light."';
 
 
-export const generateCreativePrompt = async (category: string = 'Featured'): Promise<string> => {
+export const generateCreativePrompt = async (category: string = 'Featured', options: AdvancedPromptOptions): Promise<string> => {
     let prompt = basePrompt;
+    
+    // 1. Add category context
     if (category && category !== 'Featured') {
         prompt += ` The category is "${category}".`;
     } else {
         prompt += ` ${styleSuffix}`;
     }
+
+    // 2. Add advanced options context
+    if (options.artStyle && options.artStyle !== 'Any') {
+        prompt += ` The art style should be ${options.artStyle}.`;
+    }
+    if (options.colorPalette && options.colorPalette !== 'Any') {
+        prompt += ` Use a ${options.colorPalette} color palette.`;
+    }
+    
+    const detailMap: { [key: number]: string } = {
+        1: 'minimalist with very few details',
+        2: 'simple and clean',
+        3: 'balanced in detail',
+        4: 'highly detailed',
+        5: 'intricate and complex with hyper-detailed elements'
+    };
+    const detailText = detailMap[options.detailLevel];
+    if (detailText) {
+        prompt += ` The level of detail should be ${detailText}.`;
+    }
+
 
     try {
         const response = await ai.models.generateContent({
@@ -25,8 +48,14 @@ export const generateCreativePrompt = async (category: string = 'Featured'): Pro
             contents: prompt
         });
         return response.text.trim().replace(/^"|"$/g, ''); // Trim quotes if present
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error generating creative prompt:", error);
+
+        const errorString = (typeof error === 'object' && error !== null) ? JSON.stringify(error) : String(error);
+        if (errorString.includes('RESOURCE_EXHAUSTED') || errorString.includes('429')) {
+            throw new Error("QUOTA_EXHAUSTED");
+        }
+        
         throw new Error("Failed to generate a creative prompt.");
     }
 };
@@ -54,8 +83,15 @@ export const generateImage = async (prompt: string, size: string = 'Laptop'): Pr
         } else {
             throw new Error("No image was generated.");
         }
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error generating image:", error);
+        
+        const errorString = (typeof error === 'object' && error !== null) ? JSON.stringify(error) : String(error);
+
+        if (errorString.includes('RESOURCE_EXHAUSTED') || errorString.includes('429')) {
+            throw new Error("QUOTA_EXHAUSTED");
+        }
+
         throw new Error("Failed to generate an image from the prompt.");
     }
 };

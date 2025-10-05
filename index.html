@@ -30,6 +30,41 @@
   .animate-fade-in-zoom {
     animation: fadeInZoom 1.5s ease-out forwards;
   }
+  
+  @keyframes scanline {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(100%);
+    }
+  }
+
+  .scanline-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0) 100%);
+    animation: scanline 2.5s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+
+  .animate-pulse-slow {
+      animation: pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
 </style>
 </head>
   <body class="bg-gray-900">
