@@ -1,0 +1,5 @@
+{
+  "name": "AI Wallpaper Generator",
+  "description": "A dynamic application that generates a new, unique, AI-powered wallpaper every minute. Also features ad placements for monetization.",
+  "requestFramePermissions": []
+}
